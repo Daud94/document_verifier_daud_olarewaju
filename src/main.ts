@@ -4,7 +4,6 @@ import {connectDatabase} from "./config/config";
 import {connectRabbitMQ} from "./config/rabbitmq";
 import {startDocumentVerifierWorker} from "./workers/document-verifier.worker";
 const configService = new ConfigService();
-import dotenv from 'dotenv';
 
 
 const port: string = configService.get('PORT');

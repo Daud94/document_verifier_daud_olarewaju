@@ -1,7 +1,7 @@
 import amqp from 'amqplib';
 
-let connection: amqp.Connection | null = null;
-let channel: amqp.Channel | null = null;
+let connection: amqp.ChannelModel
+let channel: amqp.Channel
 
 export const VERIFY_DOCUMENT_QUEUE = 'verify_document';
 
@@ -9,7 +9,7 @@ export const connectRabbitMQ = async (): Promise<void> => {
   try {
     // Connect to RabbitMQ server
     connection = await amqp.connect('amqp://localhost');
-    channel = await connection.createChannel();
+    channel = await connection!.createChannel();
     
     // Ensure the queue exists
     await channel.assertQueue(VERIFY_DOCUMENT_QUEUE, {
@@ -50,9 +50,9 @@ export const closeConnection = async (): Promise<void> => {
     if (channel) {
       await channel.close();
     }
-    // if (connection) {
-    //   await connection.close();
-    // }
+    if (connection) {
+      await connection.close();
+    }
     console.log('Closed RabbitMQ connection');
   } catch (error) {
     console.error('Error closing RabbitMQ connection:', error);
