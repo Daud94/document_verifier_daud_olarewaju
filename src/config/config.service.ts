@@ -11,7 +11,9 @@ const env = lodash.pick(process.env, [
     'JWT_SECRET',
     'JWT_EXPIRATION',
     'SALT_ROUNDS',
-    'DATABASE'
+    'DATABASE',
+    'REDIS_URL',
+    'REDIS_TTL'
 ]);
 
 export class ConfigService {
