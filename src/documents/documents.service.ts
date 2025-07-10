@@ -3,6 +3,7 @@ import {CreateDocumentType} from "./types/create-document.type";
 import {DocumentQueryType} from "./types/document-query.type";
 import {paginate} from "../utils/pagination";
 import {publishMessage, VERIFY_DOCUMENT_QUEUE} from "../config/rabbitmq";
+import {getValue} from "../config/redis";
 
 const findOne = async (where: { [key: string]: any }) => {
     return await DocumentModel.findOne(where).exec();
@@ -23,8 +24,22 @@ const createDocument = async (payload: CreateDocumentType, userId: string) => {
 }
 
 const getDocument = async (id: string, userId?: string) => {
-    const document = await DocumentModel.findOne({_id: id, ...(userId && {user: userId})}).lean(true).exec()
-    return document
+    // Try to get document status from Redis cache
+    const cachedStatus = await getValue(`document:${id}:status`);
+
+    // Get document from database
+    const document = await DocumentModel.findOne({_id: id, ...(userId && {user: userId})}).lean(true).exec();
+
+    // If document exists and we have a cached status, use the cached status
+    if (document && cachedStatus) {
+        console.log(`Using cached status for document ${id}: ${cachedStatus}`);
+        return {
+            ...document,
+            status: cachedStatus
+        };
+    }
+
+    return document;
 }
 
 const getAllCDocuments = async (query: DocumentQueryType, userId?: string) => {
@@ -41,9 +56,21 @@ const getAllCDocuments = async (query: DocumentQueryType, userId?: string) => {
 
     const pagination = paginate(documentCounts, query.limit, query.page)
 
+    // Check Redis cache for each document's status
+    const updatedDocuments = await Promise.all(documents.map(async (doc) => {
+        const cachedStatus = await getValue(`document:${doc._id}:status`);
+        if (cachedStatus) {
+            console.log(`Using cached status for document ${doc._id}: ${cachedStatus}`);
+            return {
+                ...doc,
+                status: cachedStatus
+            };
+        }
+        return doc;
+    }));
 
     return {
-        documents,
+        documents: updatedDocuments,
         pagination,
     }
 }

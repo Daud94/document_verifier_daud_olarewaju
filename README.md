@@ -14,6 +14,7 @@ Document Verifier is a RESTful API service that allows users to submit documents
 - **MongoDB** - Database
 - **Mongoose** - MongoDB ODM
 - **RabbitMQ** - Message broker
+- **Redis** - Caching layer
 - **JWT** - Authentication
 - **Jest** - Testing framework
 
@@ -24,6 +25,7 @@ Document Verifier is a RESTful API service that allows users to submit documents
 - Node.js (v14 or higher)
 - MongoDB
 - RabbitMQ
+- Redis
 
 ### Environment Setup
 
@@ -37,6 +39,8 @@ JWT_SECRET=your_jwt_secret
 JWT_EXPIRATION=1d
 SALT_ROUNDS=10
 DATABASE=document-verifier
+REDIS_URL=redis://localhost:6379
+REDIS_TTL=600  # TTL in seconds for document status cache (10 minutes)
 ```
 
 ### Installation
@@ -111,6 +115,8 @@ The application follows a layered architecture:
 3. A message is published to the RabbitMQ queue
 4. The document verifier worker consumes the message
 5. The worker processes the document and updates its status to "VERIFIED" or "FAILED"
+6. The document status is cached in Redis with a 10-minute TTL
+7. Subsequent requests for the document status check the Redis cache first before querying the database
 
 ## API Endpoints
 
@@ -127,5 +133,7 @@ The application follows a layered architecture:
 
 ## Notes
 
-- The RabbitMQ connection is currently hardcoded to `amqp://localhost`. For production, this should be configurable via environment variables.
+- The RabbitMQ connection is configurable via the `RABBITMQ_URL` environment variable.
+- The Redis connection is configurable via the `REDIS_URL` environment variable.
+- The Redis cache TTL for document status is configurable via the `REDIS_TTL` environment variable (default: 600 seconds / 10 minutes).
 - The document verification process is currently simulated (random success/failure). In a real-world scenario, this would be replaced with actual verification logic.
