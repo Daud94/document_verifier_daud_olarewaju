@@ -13,7 +13,8 @@ const env = lodash.pick(process.env, [
     'SALT_ROUNDS',
     'DATABASE',
     'REDIS_URL',
-    'REDIS_TTL'
+    'REDIS_TTL',
+    'RABBITMQ_URL'
 ]);
 
 export class ConfigService {

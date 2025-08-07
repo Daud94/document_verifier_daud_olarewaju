@@ -10,4 +10,7 @@ export const environmentSchema = Joi.object({
     JWT_SECRET: Joi.string().min(32).required(),
     JWT_EXPIRATION: Joi.string().default('1h'),
     SALT_ROUNDS: Joi.number().required(),
+    REDIS_URL: Joi.string().uri().required(),
+    REDIS_TTL: Joi.number().required(),
+    RABBITMQ_URL: Joi.string().uri().required(),
 })
